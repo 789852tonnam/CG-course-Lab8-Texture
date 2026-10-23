@@ -1,26 +1,36 @@
 #ifndef COLOR_GLSL_INCLUDED
 #define COLOR_GLSL_INCLUDED
 
-// TODO(TASK 1a)
+// DONE(TASK 1a)
 // sRGB-encoded value (what the bytes of a colour texture mean) -> linear light.
 // The exact piecewise curve, not pow(c, 2.2).
 vec3 srgb_to_linear(vec3 c) {
+  bvec3 a = lessThanEqual(c, vec3(0.04045));
+  c = mix(pow((c + 0.055)/1.055, vec3(2.4)), c/12.92, a);
   return c;
 }
 
-// TODO(TASK 1b)
+// DONE(TASK 1b)
 // Linear light -> sRGB-encoded value (what the UNORM target and the screen expect).
 // The exact inverse of srgb_to_linear.
 vec3 linear_to_srgb(vec3 c) {
+  bvec3 a = lessThanEqual(c, vec3(0.0031308));
+  c = mix(1.055 * pow(c, vec3(1.0/2.4)) - 0.055, c * 12.92, a);
   return c;
 }
 
-// TODO(TASK 1c)
+// DONE(TASK 1c)
 // A debug view for albedo textures: luminance of the LINEAR colour, too dark
 // (< 0.04) shows blue, too bright (> 0.9) shows red, anything else shows that
 // luminance as a grey, encoded for display.
 vec3 albedo_check(vec3 lin) {
-  return lin;
+  float lum = dot(lin, vec3(0.2126, 0.7152, 0.0722));
+  if (lum < 0.04) {
+    return vec3(0.0, 0.0, 1.0);
+  } else if (lum > 0.9) {
+    return vec3(1.0, 0.0, 0.0);
+  }
+  return linear_to_srgb(vec3(lum));
 }
 
 #endif
